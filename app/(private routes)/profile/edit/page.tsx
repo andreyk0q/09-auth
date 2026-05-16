@@ -4,18 +4,20 @@ import { FormEvent, useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { getMe, updateMe } from "@/lib/api/clientApi";
+import { useAuthStore } from "@/lib/store/authStore";
 import type { User } from "@/types/user";
 import css from "./EditProfile.module.css";
 
 export default function EditProfile() {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setLocalUser] = useState<User | null>(null);
   const [username, setUsername] = useState("");
+  const setUser = useAuthStore((state) => state.setUser);
 
   useEffect(() => {
     async function loadUser() {
       const currentUser = await getMe();
-      setUser(currentUser);
+      setLocalUser(currentUser);
       setUsername(currentUser.username);
     }
 
@@ -25,7 +27,8 @@ export default function EditProfile() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    await updateMe({ username });
+    const updatedUser = await updateMe({ username });
+    setUser(updatedUser);
     router.push("/profile");
   }
 
