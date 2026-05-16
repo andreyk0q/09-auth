@@ -1,0 +1,79 @@
+"use client";
+
+import { FormEvent, useEffect, useState } from "react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { getMe, updateMe } from "@/lib/api/clientApi";
+import type { User } from "@/types/user";
+import css from "./EditProfile.module.css";
+
+export default function EditProfile() {
+  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+  const [username, setUsername] = useState("");
+
+  useEffect(() => {
+    async function loadUser() {
+      const currentUser = await getMe();
+      setUser(currentUser);
+      setUsername(currentUser.username);
+    }
+
+    loadUser();
+  }, []);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    await updateMe({ username });
+    router.push("/profile");
+  }
+
+  if (!user) {
+    return <p>Loading, please wait...</p>;
+  }
+
+  return (
+    <main className={css.mainContent}>
+      <div className={css.profileCard}>
+        <h1 className={css.formTitle}>Edit Profile</h1>
+
+        <Image
+          src={user.avatar}
+          alt="User Avatar"
+          width={120}
+          height={120}
+          className={css.avatar}
+        />
+
+        <form className={css.profileInfo} onSubmit={handleSubmit}>
+          <div className={css.usernameWrapper}>
+            <label htmlFor="username">Username:</label>
+            <input
+              id="username"
+              type="text"
+              className={css.input}
+              value={username}
+              onChange={(event) => setUsername(event.target.value)}
+            />
+          </div>
+
+          <p>Email: {user.email}</p>
+
+          <div className={css.actions}>
+            <button type="submit" className={css.saveButton}>
+              Save
+            </button>
+            <button
+              type="button"
+              className={css.cancelButton}
+              onClick={() => router.push("/profile")}
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </main>
+  );
+}
