@@ -1,5 +1,5 @@
 import Modal from "@/components/Modal/Modal";
-import NotePreview from "@/components/NotePreview/NotePreview";
+import NotePreviewClient from "./NotePreview.client";
 
 interface ModalPageProps {
   params: Promise<{
@@ -12,7 +12,7 @@ export default async function ModalPage({ params }: ModalPageProps) {
 
   return (
     <Modal>
-      <NotePreview id={id} />
+      <NotePreviewClient id={id} />
     </Modal>
   );
 }
