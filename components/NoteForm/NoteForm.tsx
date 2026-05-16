@@ -1,60 +1,89 @@
 "use client";
 
-import { Formik, Form, Field, ErrorMessage } from "formik";
-import * as Yup from "yup";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { createNote } from "@/lib/api";
-import type { NoteTag } from "@/types/note";
+import { useNoteStore } from "@/lib/store/noteStore";
 import css from "./NoteForm.module.css";
-import type { CreateNoteData } from "@/lib/api";
 
-interface NoteFormProps {
-  onClose: () => void;
-}
+export default function NoteForm() {
+  const router = useRouter();
+  const { draft, setDraft, clearDraft } = useNoteStore();
 
-const schema = Yup.object({
-  title: Yup.string().min(3).max(50).required(),
-  content: Yup.string().max(500),
-  tag: Yup.mixed<NoteTag>().required(),
-});
+  async function handleSubmit(formData: FormData) {
+    const title = formData.get("title") as string;
+    const content = formData.get("content") as string;
+    const tag = formData.get("tag") as
+      | "Todo"
+      | "Work"
+      | "Personal"
+      | "Meeting"
+      | "Shopping";
 
-export default function NoteForm({ onClose }: NoteFormProps) {
-  const queryClient = useQueryClient();
+    await createNote({
+      title,
+      content,
+      tag,
+    });
 
-  const mutation = useMutation({
-    mutationFn: createNote,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notes"] });
-      onClose();
-    },
-  });
+    clearDraft();
+    router.back();
+  }
+
+  function handleChange(
+    event: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) {
+    setDraft({
+      [event.target.name]: event.target.value,
+    });
+  }
 
   return (
-    <Formik<CreateNoteData>
-  initialValues={{ title: "", content: "", tag: "Todo" }}
-  validationSchema={schema}
-  onSubmit={(values) => mutation.mutate(values)}
->
-      <Form className={css.form}>
-        <Field name="title" placeholder="Title" />
-        <ErrorMessage name="title" />
+    <form action={handleSubmit} className={css.form}>
+      <input
+        className={css.input}
+        type="text"
+        name="title"
+        placeholder="Title"
+        value={draft.title}
+        onChange={handleChange}
+      />
 
-        <Field as="textarea" name="content" />
+      <textarea
+        className={css.textarea}
+        name="content"
+        placeholder="Content"
+        value={draft.content}
+        onChange={handleChange}
+      />
 
-        <Field as="select" name="tag">
-          <option value="Todo">Todo</option>
-          <option value="Work">Work</option>
-          <option value="Personal">Personal</option>
-          <option value="Meeting">Meeting</option>
-          <option value="Shopping">Shopping</option>
-        </Field>
+      <select
+        className={css.select}
+        name="tag"
+        value={draft.tag}
+        onChange={handleChange}
+      >
+        <option value="Todo">Todo</option>
+        <option value="Work">Work</option>
+        <option value="Personal">Personal</option>
+        <option value="Meeting">Meeting</option>
+        <option value="Shopping">Shopping</option>
+      </select>
 
-        <button type="button" onClick={onClose}>
+      <div className={css.actions}>
+        <button
+          type="button"
+          className={css.cancelBtn}
+          onClick={() => router.back()}
+        >
           Cancel
         </button>
 
-        <button type="submit">Create</button>
-      </Form>
-    </Formik>
+        <button type="submit" className={css.submitBtn}>
+          Create
+        </button>
+      </div>
+    </form>
   );
 }

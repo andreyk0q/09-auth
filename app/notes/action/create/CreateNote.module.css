@@ -1,0 +1,12 @@
+.main {
+    padding: 24px;
+}
+
+.container {
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+.title {
+    margin-bottom: 24px;
+}
